@@ -1,5 +1,5 @@
 import axios from 'axios';
-const serverUrl = 'http://localhost:3001/';
+const serverUrl = 'https://v12resole-api.onrender.com'//'http://localhost:3001/';
 
 const axiosBase = axios.create({
     baseURL: serverUrl,
