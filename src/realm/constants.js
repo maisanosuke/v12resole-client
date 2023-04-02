@@ -1,0 +1,1 @@
+export const APP_ID = 'application-v12resole-fkzyr';

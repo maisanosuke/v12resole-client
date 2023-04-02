@@ -1,0 +1,41 @@
+.flexContainer{
+    display: flex;
+    padding: 0px;
+}
+
+.flexItems{
+    display: flex;
+    flex: 1; /*in order to distribute container space equally*/
+}
+
+.flexItems:nth-child(2){
+    justify-content: center;
+}
+
+.icon{
+    width: 2rem;
+    height: 2rem;
+    cursor: pointer;
+}
+
+.rounded-circle{
+    color: white;
+    transform: translate(-60%, 60%);
+    padding: 0 7px 1px;
+    cursor: pointer;
+}
+
+@media (max-width: 991px) {
+    .navElements{
+        text-align: center;
+        font-weight: 600;
+    }
+    .navElement{
+        width: 100%;
+        border-top: 1px solid rgba(0,0,0,0.1);
+        padding: 20px !important;
+    }
+    .navElement:nth-child(4n){
+        border-bottom: 1px solid rgba(0,0,0,0.1)
+    }
+}

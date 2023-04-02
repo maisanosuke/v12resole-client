@@ -1,0 +1,18 @@
+/* Hide when the browser's width is 750px wide or less: */
+@media (max-width: 840px){
+    .sidebarCategory{
+        display: none;
+    }
+}
+
+@media (min-width: 841px){
+    .dropdownCategory {
+        display: none; 
+    }
+
+    .shopContainer{
+        display: flex;
+        flex-direction: row;
+    }
+
+}
