@@ -1,5 +1,5 @@
 import React from 'react';
-import { sendPostLogin, sendPostSignup, sendPatchUpdateUser, getOrderHistory } from '../api';
+import { sendPostLogin, sendPostSignup, sendPatchUpdatePassword, getOrderHistory } from '../api';
 import useLocalStorage from '../hooks/useLocalStorage';
 import * as Realm from "realm-web";
 import {APP_ID} from "../realm/constants";
@@ -12,7 +12,6 @@ export const useUser = () => React.useContext(UserContext);
 
 export function UserProvider({children}){
     const [currentUser, setCurrentUser] = useLocalStorage('currentUser', null);
-    const [tempUser, setTempUser] = useLocalStorage('tempUser', null);
 
     const login = async ({email, password}) => {
         try{
@@ -20,35 +19,44 @@ export function UserProvider({children}){
             await app.logIn(credentials);
             //console.log('currentUser:', app.currentUser);
             const {data} = await sendPostLogin({email});
-            //console.log('res from server:', data);
-            //console.log('user data: ', data.user)
+            //console.log('res from server:', res);
             const {firstName, lastName} = data.user;
             setCurrentUser({id: app.currentUser.id, email: email, name: `${firstName} ${lastName}`});
-            return data.message;
-            //return 'Successfully Logged in!';
+            return data.message;//'Successfully Logged in!';
+
         }catch(e){
             if(e.error === 'invalid username/password'){
                 throw new Error("Invalid Email or Password");
             }
-
-            if(e.response.data && e.response.status){
-                throw new Error(`${e.response.status}: ${e.response.data}`);
+            else{
+                console.log('e.error', e.error);
+                throw new Error('Unable to login at this time');
             }
-
-            throw new Error(e.message);
+            // if(e.response.data && e.response.status){
+            //     throw new Error(`${e.response.status}: ${e.response.data}`);
+            // }
         }
     }
 
-    const signup = async (values) => {//values = {email, firstName, lastName, password}
+    //sign up & automatically login user on Realm
+    const signup = async (values) => {
         //await new Promise((resolve) => setTimeout(resolve, 1000));
             try {
-                const {firstName, lastName, email, password} = values;
-                //sign up & login user on Realm
+                const {email, firstName, lastName, password} = values;
                 await app.emailPasswordAuth.registerUser({email, password});
                 //await app.emailPasswordAuth.sendVerificationEmail(email);
                 //console.log("verification email sent:", app.currentUser);
-                setTempUser({firstName, lastName, email});
-                return "Verification email sent!";
+                //return "Verification email sent!";
+
+                //automatically confirming user email and proceed to login
+                const credentials = Realm.Credentials.emailPassword(email, password);
+                await app.logIn(credentials);
+
+                //send to MongoDB to save user's data
+                await sendPostSignup({id: app.currentUser.id, email, firstName, lastName});
+
+                setCurrentUser({id: app.currentUser.id, email: email, name: `${firstName} ${lastName}`});
+                return 'Successfully signed up!';
 
             }catch(e){
                 if(e.error === 'name already in use'){
@@ -58,22 +66,6 @@ export function UserProvider({children}){
                 //throw (e?.response ? `ERROR ${e.response.status}: ${e?.response?.data}` : e )
             }
     }
-
-    const confirmEmailAndLogin = async(token) => {
-        try{
-            if(!tempUser) throw new Error({error: "No Temp User stored!"});
-            await app.emailPasswordAuth.confirmUser(token);
-            // const credentials = Realm.Credentials.emailPassword(tempUser.email, password);
-            // await app.logIn(credentials);
-            setCurrentUser({id: app.currentUser.id, email: tempUser.email, name: `${tempUser.firstName} ${tempUser.lastName}`});
-            //const {data} = await sendPostSignup({id: app.currentUser.id, email: tempUser.email, firstName: tempUser.firstName, lastName: tempUser.lastName});
-            //return data.message;
-            return 'successfully confirmed email!';
-        }catch(e){
-            console.error('e.error', e.error);
-            throw new Error('Error confirming Email');
-        }
-    } 
 
 
     const logout = async () => {
